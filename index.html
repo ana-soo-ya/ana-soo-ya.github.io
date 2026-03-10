@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Studio Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Pixel Art Studio Pro</h1>
+        <div class="subtitle">Advanced Image to Pixel Art Converter with Professional Tools</div>
+
+        <div class="main-grid">
+            <!-- Left Sidebar - Tools -->
+            <div class="sidebar">
+                <div class="tool-section">
+                    <h3>📁 Input</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">🖼️</div>
+                        <div>Drag & drop or click to browse</div>
+                        <div style="font-size: 0.8em; color: #999; margin-top: 5px;">JPG, PNG, GIF, BMP, WEBP</div>
+                        <input type="file" id="fileInput" class="file-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h3>🎚️ Basic Controls</h3>
+                    
+                    <div class="control-group">
+                        <label>Pixel Size: <span id="pixelSizeValue" class="range-value">8</span>px</label>
+                        <input type="range" id="pixelSize" min="1" max="64" value="8">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Pixel Shape:</label>
+                        <select id="pixelShape" class="select-style">
+                            <option value="square">Square</option>
+                            <option value="circle">Circle</option>
+                            <option value="diamond">Diamond</option>
+                            <option value="hexagon">Hexagon</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Grid Thickness:</label>
+                        <input type="range" id="gridThickness" min="0" max="3" value="0" step="0.5">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Grid Color:</label>
+                        <input type="color" id="gridColor" value="#000000">
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h3>🎨 Color Management</h3>
+                    
+                    <div class="control-group">
+                        <label>Palette:</label>
+                        <select id="palette" class="select-style">
+                            <option value="full">Full Color</option>
+                            <option value="nes">NES (54 colors)</option>
+                            <option value="gameboy">Game Boy (4 colors)</option>
+                            <option value="cga">CGA (16 colors)</option>
+                            <option value="mono">Monochrome</option>
+                            <option value="sega">Sega Master System (64 colors)</option>
+                            <option value="apple2">Apple II (16 colors)</option>
+                            <option value="commodore64">Commodore 64 (16 colors)</option>
+                            <option value="zxs">ZX Spectrum (15 colors)</option>
+                            <option value="custom">Custom Palette</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" id="customPaletteSection" style="display: none;">
+                        <label>Custom Colors:</label>
+                        <div class="color-grid" id="customColorGrid"></div>
+                        <div style="display: flex; gap: 5px; margin-top: 10px;">
+                            <input type="color" id="newColor" value="#4ecdc4">
+                            <button class="btn btn-outline" id="addColorBtn" style="padding: 5px 10px;">Add</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Color Count:</label>
+                        <input type="range" id="colorCount" min="2" max="256" value="16">
+                        <span id="colorCountValue" class="range-value">16</span>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="dithering" checked> Dithering
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="colorClustering"> Color Clustering
+                        </label>
+                    </div>
+
+                    <div class="control-group" id="ditheringTypeGroup">
+                        <label>Dithering Type:</label>
+                        <select id="ditheringType" class="select-style">
+                            <option value="floyd">Floyd-Steinberg</option>
+                            <option value="bayer">Bayer Matrix</option>
+                            <option value="atkinson">Atkinson</option>
+                            <option value="burkes">Burkes</option>
+                            <option value="stucki">Stucki</option>
+                            <option value="sierra">Sierra</option>
+                            <option value="jarvis">Jarvis-Judice-Ninke</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h3>✨ Effects & Filters</h3>
+                    
+                    <div class="filter-chips">
+                        <span class="filter-chip" data-filter="none">None</span>
+                        <span class="filter-chip" data-filter="grayscale">Grayscale</span>
+                        <span class="filter-chip" data-filter="sepia">Sepia</span>
+                        <span class="filter-chip" data-filter="invert">Invert</span>
+                        <span class="filter-chip" data-filter="posterize">Posterize</span>
+                        <span class="filter-chip" data-filter="edge">Edge Detect</span>
+                        <span class="filter-chip" data-filter="emboss">Emboss</span>
+                        <span class="filter-chip" data-filter="sharpen">Sharpen</span>
+                        <span class="filter-chip" data-filter="blur">Gaussian Blur</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Brightness: <span id="brightnessValue" class="range-value">0</span></label>
+                        <input type="range" id="brightness" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Contrast: <span id="contrastValue" class="range-value">0</span></label>
+                        <input type="range" id="contrast" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Saturation: <span id="saturationValue" class="range-value">0</span></label>
+                        <input type="range" id="saturation" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Hue Rotate: <span id="hueValue" class="range-value">0°</span></label>
+                        <input type="range" id="hue" min="0" max="360" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Preview Area -->
+            <div class="preview-area">
+                <div class="canvas-row">
+                    <div class="canvas-container">
+                        <h3>🖼️ Original Image</h3>
+                        <canvas id="originalCanvas"></canvas>
+                    </div>
+
+                    <div class="canvas-container">
+                        <h3>🎯 Pixel Art Result</h3>
+                        <canvas id="pixelCanvas"></canvas>
+                        <div class="spinner" id="loadingSpinner"></div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="processBtn" disabled>
+                        🔄 Process Image
+                    </button>
+                    <button class="btn btn-success" id="downloadBtn" disabled>
+                        ⬇️ Download
+                    </button>
+                    <button class="btn btn-outline" id="resetBtn" disabled>
+                        ↩️ Reset
+                    </button>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-outline" id="copyBtn" disabled>
+                        📋 Copy to Clipboard
+                    </button>
+                    <button class="btn btn-outline" id="shareBtn" disabled>
+                        📤 Share
+                    </button>
+                    <button class="btn btn-outline" id="fullscreenBtn">
+                        🔍 Fullscreen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Advanced Tools -->
+            <div class="sidebar">
+                <div class="tool-section">
+                    <h3>📊 Image Info</h3>
+                    <div id="imageInfo">
+                        <p>Dimensions: <span id="imgDimensions">-</span></p>
+                        <p>File size: <span id="imgSize">-</span></p>
+                        <p>Format: <span id="imgFormat">-</span></p>
+                        <p>Colors: <span id="imgColors">-</span></p>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h3>⚙️ Advanced Settings</h3>
+                    
+                    <div class="control-group">
+                        <label>Scale Method:</label>
+                        <select id="scaleMethod" class="select-style">
+                            <option value="nearest">Nearest Neighbor (Pixelated)</option>
+                            <option value="bilinear">Bilinear (Smooth)</option>
+                            <option value="bicubic">Bicubic (Very Smooth)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Color Space:</label>
+                        <select id="colorSpace" class="select-style">
+                            <option value="rgb">RGB</option>
+                            <option value="hsl">HSL</option>
+                            <option value="lab">LAB</option>
+                            <option value="yuv">YUV</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Edge Smoothing:</label>
+                        <input type="range" id="edgeSmoothing" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="preserveAspect"> Preserve Aspect Ratio
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="transparentBg"> Transparent Background
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="autoEnhance"> Auto Enhance
+                        </label>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h3>🔄 Batch Processing</h3>
+                    <div class="control-group">
+                        <label>Batch Size:</label>
+                        <input type="number" id="batchSize" class="input-style" value="1" min="1" max="10">
+                    </div>
+                    <button class="btn btn-outline" id="batchBtn" style="width: 100%;" disabled>
+                        📦 Process Batch
+                    </button>
+                </div>
+
+                <div class="tool-section">
+                    <h3>📜 History</h3>
+                    <div class="history-panel" id="historyPanel">
+                        <div style="text-align: center; color: #999;">No history yet</div>
+                    </div>
+                    <div style="display: flex; gap: 5px; margin-top: 10px;">
+                        <button class="btn btn-outline" id="undoBtn" disabled style="flex: 1;">↩️ Undo</button>
+                        <button class="btn btn-outline" id="clearHistoryBtn" disabled style="flex: 1;">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h3>🎮 Presets</h3>
+                    <select id="presets" class="select-style">
+                        <option value="">Select a preset...</option>
+                        <option value="8bit">8-bit Console</option>
+                        <option value="16bit">16-bit Console</option>
+                        <option value="gameboy">Game Boy</option>
+                        <option value="nes">NES</option>
+                        <option value="crt">CRT Monitor</option>
+                        <option value="dotmatrix">Dot Matrix</option>
+                        <option value="crossstitch">Cross Stitch</option>
+                        <option value="minecraft">Minecraft Style</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <h2>⬇️ Export Options</h2>
+            <div class="modal-options">
+                <label>
+                    Format:
+                    <select id="exportFormat" class="select-style">
+                        <option value="png">PNG (lossless)</option>
+                        <option value="jpg">JPEG (smaller file)</option>
+                        <option value="webp">WebP (modern)</option>
+                        <option value="bmp">BMP (uncompressed)</option>
+                        <option value="gif">GIF (animated)</option>
+                    </select>
+                </label>
+                <label>
+                    Quality:
+                    <input type="range" id="exportQuality" min="1" max="100" value="90">
+                </label>
+                <label>
+                    Scale:
+                    <input type="number" id="exportScale" min="1" max="10" value="1">
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="exportTransparent"> Preserve Transparency
+                </label>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="confirmExport">Export</button>
+                <button class="btn btn-outline" id="cancelExport">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
