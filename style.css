@@ -26,7 +26,6 @@ body {
     padding: 30px;
     max-width: 1400px;
     width: 100%;
-    backdrop-filter: blur(10px);
 }
 
 h1 {
@@ -465,8 +464,6 @@ canvas {
     inset: 0;
     background: rgba(0, 0, 0, 0.45);
     z-index: 150;
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
 }
 
 .drawer-backdrop.active {
