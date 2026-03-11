@@ -82,7 +82,7 @@ class PixelArtStudioPro {
 
         // Close drawers when resizing above tablet breakpoint
         window.addEventListener('resize', () => {
-            if (window.innerWidth > 768) closeDrawers();
+            if (window.innerWidth > 900) closeDrawers();
         });
     }
 
@@ -264,14 +264,14 @@ class PixelArtStudioPro {
         uploadArea.addEventListener('click', () => fileInput.click());
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.style.background = '#e8f8f5';
+            uploadArea.style.background = 'rgba(78, 205, 196, 0.08)';
         });
         uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.background = 'white';
+            uploadArea.style.background = '';
         });
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.style.background = 'white';
+            uploadArea.style.background = '';
             const file = e.dataTransfer.files[0];
             if (file && file.type.startsWith('image/')) {
                 this.loadImage(file);
@@ -1365,7 +1365,7 @@ class PixelArtStudioPro {
         panel.innerHTML = '';
         
         if (this.history.length === 0) {
-            panel.innerHTML = '<div style="text-align: center; color: #999;">No history yet</div>';
+            panel.innerHTML = '<div style="text-align: center; color: var(--text-muted);">No history yet</div>';
             return;
         }
         
@@ -1374,7 +1374,7 @@ class PixelArtStudioPro {
             const item = document.createElement('div');
             item.className = 'history-item';
             if (i === this.currentHistoryIndex) {
-                item.style.background = '#e8f8f5';
+                item.classList.add('active');
             }
             
             item.innerHTML = `
@@ -1570,13 +1570,7 @@ class PixelArtStudioPro {
     showToast(message, type = 'success') {
         const toast = document.createElement('div');
         toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: ${type === 'success' ? '#4ecdc4' : '#ff6b6b'};
-            color: white; padding: 12px 24px; border-radius: 25px;
-            font-weight: 600; z-index: 9999; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            transition: opacity 0.4s ease; opacity: 1;
-        `;
+        toast.className = `toast toast--${type}`;
         document.body.appendChild(toast);
         setTimeout(() => {
             toast.style.opacity = '0';
