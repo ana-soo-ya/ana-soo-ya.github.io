@@ -20,7 +20,7 @@
     const CONFIG = {
         // 'me'       → developer mode: shows every single page load, no limits
         // 'anasooya' → gift mode: shows MAX_SHOWS times then never again
-        mode: 'me',
+        mode: 'anasooya',
 
         // How many times Anasooya sees it (only applies when mode = 'anasooya')
         maxShows: 2,
