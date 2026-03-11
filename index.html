@@ -77,8 +77,12 @@
                         <label>Grid Color:</label>
                         <input type="color" id="gridColor" value="#000000">
                     </div>
+                </div>
 
-                    <div class="control-group" style="margin-top: 12px;">
+                <div class="tool-section" id="section-adjustments">
+                    <h3>🎛️ Adjustments</h3>
+
+                    <div class="control-group">
                         <label>Brightness: <span id="brightnessValue" class="range-value">0</span></label>
                         <input type="range" id="brightness" min="-100" max="100" value="0">
                     </div>
@@ -126,11 +130,6 @@
                         </div>
                     </div>
 
-                    <div class="checkbox-group">
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="dithering" checked> Dithering
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -140,7 +139,7 @@
                     <div class="upload-area" id="uploadArea">
                         <div class="upload-icon">🖼️</div>
                         <div>Drag & drop or click to browse</div>
-                        <div style="font-size: 0.8em; color: #999; margin-top: 5px;">JPG, PNG, GIF, BMP, WEBP</div>
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-top: 5px;">JPG, PNG, GIF, BMP, WEBP</div>
                         <input type="file" id="fileInput" class="file-input" accept="image/*" style="display: none;">
                     </div>
                 </div>
@@ -148,12 +147,12 @@
                 <div class="canvas-row">
                     <div class="canvas-container">
                         <h3>🖼️ Original Image</h3>
-                        <canvas id="originalCanvas"></canvas>
+                        <canvas id="originalCanvas" aria-label="Original uploaded image" role="img"></canvas>
                     </div>
 
                     <div class="canvas-container">
                         <h3>🎯 Pixel Art Result</h3>
-                        <canvas id="pixelCanvas"></canvas>
+                        <canvas id="pixelCanvas" aria-label="Pixel art result" role="img"></canvas>
                         <div class="spinner" id="loadingSpinner"></div>
                     </div>
                 </div>
@@ -211,6 +210,12 @@
                     <div class="checkbox-group">
                         <label class="checkbox-item">
                             <input type="checkbox" id="colorClustering"> Color Clustering
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="dithering" checked> Dithering
                         </label>
                     </div>
 
@@ -282,7 +287,7 @@
                 <div class="tool-section" id="section-history">
                     <h3>📜 History</h3>
                     <div class="history-panel" id="historyPanel">
-                        <div style="text-align: center; color: #999;">No history yet</div>
+                        <div style="text-align: center; color: var(--text-muted);">No history yet</div>
                     </div>
                     <div style="display: flex; gap: 5px; margin-top: 10px;">
                         <button class="btn btn-outline" id="undoBtn" disabled style="flex: 1;">↩️ Undo</button>
@@ -296,7 +301,7 @@
     <!-- Export Modal -->
     <div class="modal" id="exportModal">
         <div class="modal-content">
-            <h2>⬇️ Export Options <span id="closeModal" style="float:right; cursor:pointer; font-size:1.4em; line-height:1; color:#999;">×</span></h2>
+            <h2>⬇️ Export Options <span id="closeModal" style="float:right; cursor:pointer; font-size:1.4em; line-height:1; color:var(--text-muted);">×</span></h2>
             <div class="modal-options">
                 <label>
                     Format:
@@ -334,6 +339,7 @@
     <div class="mobile-icon-bar mobile-icon-bar--left">
         <button class="mobile-icon-btn" data-drawer="basic" data-section="section-filters" title="Filters">✨</button>
         <button class="mobile-icon-btn" data-drawer="basic" data-section="section-pixel" title="Pixel Controls">🎚️</button>
+        <button class="mobile-icon-btn" data-drawer="basic" data-section="section-adjustments" title="Adjustments">🎛️</button>
         <button class="mobile-icon-btn" data-drawer="basic" data-section="section-palette" title="Palette">🎨</button>
     </div>
 
