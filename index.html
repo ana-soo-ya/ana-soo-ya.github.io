@@ -14,15 +14,39 @@
         <div class="main-grid">
             <!-- Left Sidebar - Basic -->
             <div class="sidebar" id="sidebar-basic">
-                <div class="sidebar-label">🟢 Basic</div>
+                <div class="drawer-header">
+                    <div class="sidebar-label">🟢 Basic</div>
+                    <button class="drawer-close-btn" id="closeBasicDrawer" aria-label="Close panel">✕</button>
+                </div>
 
-                <div class="tool-section" id="section-upload">
-                    <h3>📁 Upload Image</h3>
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-icon">🖼️</div>
-                        <div>Drag & drop or click to browse</div>
-                        <div style="font-size: 0.8em; color: #999; margin-top: 5px;">JPG, PNG, GIF, BMP, WEBP</div>
-                        <input type="file" id="fileInput" class="file-input" accept="image/*" style="display: none;">
+                <div class="tool-section" id="section-filters">
+                    <h3>✨ Filters</h3>
+
+                    <div class="filter-chips">
+                        <span class="filter-chip" data-filter="none">None</span>
+                        <span class="filter-chip" data-filter="grayscale">Grayscale</span>
+                        <span class="filter-chip" data-filter="sepia">Sepia</span>
+                        <span class="filter-chip" data-filter="invert">Invert</span>
+                        <span class="filter-chip" data-filter="posterize">Posterize</span>
+                        <span class="filter-chip" data-filter="edge">Edge Detect</span>
+                        <span class="filter-chip" data-filter="emboss">Emboss</span>
+                        <span class="filter-chip" data-filter="sharpen">Sharpen</span>
+                        <span class="filter-chip" data-filter="blur">Gaussian Blur</span>
+                    </div>
+
+                    <div class="control-group" style="margin-top: 12px;">
+                        <label>🎮 Preset:</label>
+                        <select id="presets" class="select-style">
+                            <option value="">Select a preset...</option>
+                            <option value="8bit">8-bit Console</option>
+                            <option value="16bit">16-bit Console</option>
+                            <option value="gameboy">Game Boy</option>
+                            <option value="nes">NES</option>
+                            <option value="crt">CRT Monitor</option>
+                            <option value="dotmatrix">Dot Matrix</option>
+                            <option value="crossstitch">Cross Stitch</option>
+                            <option value="minecraft">Minecraft Style</option>
+                        </select>
                     </div>
                 </div>
 
@@ -52,6 +76,26 @@
                     <div class="control-group">
                         <label>Grid Color:</label>
                         <input type="color" id="gridColor" value="#000000">
+                    </div>
+
+                    <div class="control-group" style="margin-top: 12px;">
+                        <label>Brightness: <span id="brightnessValue" class="range-value">0</span></label>
+                        <input type="range" id="brightness" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Contrast: <span id="contrastValue" class="range-value">0</span></label>
+                        <input type="range" id="contrast" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Saturation: <span id="saturationValue" class="range-value">0</span></label>
+                        <input type="range" id="saturation" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Hue Rotate: <span id="hueValue" class="range-value">0°</span></label>
+                        <input type="range" id="hue" min="0" max="360" value="0">
                     </div>
                 </div>
 
@@ -88,61 +132,19 @@
                         </label>
                     </div>
                 </div>
-
-                <div class="tool-section" id="section-filters">
-                    <h3>✨ Filters</h3>
-
-                    <div class="filter-chips">
-                        <span class="filter-chip" data-filter="none">None</span>
-                        <span class="filter-chip" data-filter="grayscale">Grayscale</span>
-                        <span class="filter-chip" data-filter="sepia">Sepia</span>
-                        <span class="filter-chip" data-filter="invert">Invert</span>
-                        <span class="filter-chip" data-filter="posterize">Posterize</span>
-                        <span class="filter-chip" data-filter="edge">Edge Detect</span>
-                        <span class="filter-chip" data-filter="emboss">Emboss</span>
-                        <span class="filter-chip" data-filter="sharpen">Sharpen</span>
-                        <span class="filter-chip" data-filter="blur">Gaussian Blur</span>
-                    </div>
-
-                    <div class="control-group" style="margin-top: 12px;">
-                        <label>Brightness: <span id="brightnessValue" class="range-value">0</span></label>
-                        <input type="range" id="brightness" min="-100" max="100" value="0">
-                    </div>
-
-                    <div class="control-group">
-                        <label>Contrast: <span id="contrastValue" class="range-value">0</span></label>
-                        <input type="range" id="contrast" min="-100" max="100" value="0">
-                    </div>
-
-                    <div class="control-group">
-                        <label>Saturation: <span id="saturationValue" class="range-value">0</span></label>
-                        <input type="range" id="saturation" min="-100" max="100" value="0">
-                    </div>
-
-                    <div class="control-group">
-                        <label>Hue Rotate: <span id="hueValue" class="range-value">0°</span></label>
-                        <input type="range" id="hue" min="0" max="360" value="0">
-                    </div>
-                </div>
-
-                <div class="tool-section" id="section-presets">
-                    <h3>🎮 Presets</h3>
-                    <select id="presets" class="select-style">
-                        <option value="">Select a preset...</option>
-                        <option value="8bit">8-bit Console</option>
-                        <option value="16bit">16-bit Console</option>
-                        <option value="gameboy">Game Boy</option>
-                        <option value="nes">NES</option>
-                        <option value="crt">CRT Monitor</option>
-                        <option value="dotmatrix">Dot Matrix</option>
-                        <option value="crossstitch">Cross Stitch</option>
-                        <option value="minecraft">Minecraft Style</option>
-                    </select>
-                </div>
             </div>
 
             <!-- Center - Preview Area -->
             <div class="preview-area">
+                <div class="tool-section" id="section-upload">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">🖼️</div>
+                        <div>Drag & drop or click to browse</div>
+                        <div style="font-size: 0.8em; color: #999; margin-top: 5px;">JPG, PNG, GIF, BMP, WEBP</div>
+                        <input type="file" id="fileInput" class="file-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
                 <div class="canvas-row">
                     <div class="canvas-container">
                         <h3>🖼️ Original Image</h3>
@@ -183,7 +185,10 @@
 
             <!-- Right Sidebar - Advanced -->
             <div class="sidebar" id="sidebar-advanced">
-                <div class="sidebar-label">🔬 Advanced</div>
+                <div class="drawer-header">
+                    <div class="sidebar-label">🔬 Advanced</div>
+                    <button class="drawer-close-btn" id="closeAdvancedDrawer" aria-label="Close panel">✕</button>
+                </div>
 
                 <div class="tool-section" id="section-info">
                     <h3>📊 Image Info</h3>
@@ -327,11 +332,9 @@
 
     <!-- Mobile icon bar - Basic (left) -->
     <div class="mobile-icon-bar mobile-icon-bar--left">
-        <button class="mobile-icon-btn" data-drawer="basic" data-section="section-upload" title="Upload">📁</button>
+        <button class="mobile-icon-btn" data-drawer="basic" data-section="section-filters" title="Filters">✨</button>
         <button class="mobile-icon-btn" data-drawer="basic" data-section="section-pixel" title="Pixel Controls">🎚️</button>
         <button class="mobile-icon-btn" data-drawer="basic" data-section="section-palette" title="Palette">🎨</button>
-        <button class="mobile-icon-btn" data-drawer="basic" data-section="section-filters" title="Filters">✨</button>
-        <button class="mobile-icon-btn" data-drawer="basic" data-section="section-presets" title="Presets">🎮</button>
     </div>
 
     <!-- Mobile icon bar - Advanced (right) -->
