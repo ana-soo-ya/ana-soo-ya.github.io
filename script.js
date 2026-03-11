@@ -76,9 +76,13 @@ class PixelArtStudioPro {
         // Backdrop tap closes
         backdrop.addEventListener('click', closeDrawers);
 
-        // Close drawers when resizing above mobile breakpoint
+        // Close buttons inside drawers
+        document.getElementById('closeBasicDrawer').addEventListener('click', closeDrawers);
+        document.getElementById('closeAdvancedDrawer').addEventListener('click', closeDrawers);
+
+        // Close drawers when resizing above tablet breakpoint
         window.addEventListener('resize', () => {
-            if (window.innerWidth > 480) closeDrawers();
+            if (window.innerWidth > 768) closeDrawers();
         });
     }
 
