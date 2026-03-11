@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Art Studio Pro</title>
+    <title>Anasooya Art Studio</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>🎨 Pixel Art Studio Pro</h1>
+        <h1>🎨 Anasooya Art Studio</h1>
         <div class="subtitle">Advanced Image to Pixel Art Converter with Professional Tools</div>
 
         <div class="main-grid">
@@ -139,7 +139,7 @@
                     <div class="upload-area" id="uploadArea">
                         <div class="upload-icon">🖼️</div>
                         <div>Drag & drop or click to browse</div>
-                        <div style="font-size: 0.8em; color: var(--text-muted); margin-top: 5px;">JPG, PNG, GIF, BMP, WEBP</div>
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-top: 5px;">JPG, PNG, BMP, WEBP</div>
                         <input type="file" id="fileInput" class="file-input" accept="image/*" style="display: none;">
                     </div>
                 </div>
@@ -273,17 +273,6 @@
                     </div>
                 </div>
 
-                <div class="tool-section" id="section-batch">
-                    <h3>🔄 Batch Processing</h3>
-                    <div class="control-group">
-                        <label>Batch Size:</label>
-                        <input type="number" id="batchSize" class="input-style" value="1" min="1" max="10">
-                    </div>
-                    <button class="btn btn-outline" id="batchBtn" style="width: 100%;" disabled>
-                        📦 Process Batch
-                    </button>
-                </div>
-
                 <div class="tool-section" id="section-history">
                     <h3>📜 History</h3>
                     <div class="history-panel" id="historyPanel">
@@ -310,7 +299,6 @@
                         <option value="jpg">JPEG (smaller file)</option>
                         <option value="webp">WebP (modern)</option>
                         <option value="bmp">BMP (uncompressed)</option>
-                        <option value="gif">GIF (animated)</option>
                     </select>
                 </label>
                 <label>
@@ -348,10 +336,11 @@
         <button class="mobile-icon-btn" data-drawer="advanced" data-section="section-info" title="Image Info">📊</button>
         <button class="mobile-icon-btn" data-drawer="advanced" data-section="section-color-science" title="Color Science">🔬</button>
         <button class="mobile-icon-btn" data-drawer="advanced" data-section="section-rendering" title="Rendering">⚙️</button>
-        <button class="mobile-icon-btn" data-drawer="advanced" data-section="section-batch" title="Batch">🔄</button>
         <button class="mobile-icon-btn" data-drawer="advanced" data-section="section-history" title="History">📜</button>
     </div>
 
     <script src="script.js"></script>
+    <!-- 🎂 Birthday surprise for Anasooya — remove this line after the birthday -->
+    <script src="birthday.js"></script>
 </body>
 </html>
