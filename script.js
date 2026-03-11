@@ -12,6 +12,126 @@ class PixelArtStudioPro {
         this.initEventListeners();
         this.initPalettes();
         this.initFilters();
+        this.initLivePreview();
+        this.initMobileDrawers();
+
+        document.querySelector('.filter-chip[data-filter="none"]').classList.add('active');
+    }
+
+    initMobileDrawers() {
+        const backdrop = document.getElementById('drawerBackdrop');
+        const basicSidebar = document.getElementById('sidebar-basic');
+        const advancedSidebar = document.getElementById('sidebar-advanced');
+        let activeDrawer = null; // 'basic' | 'advanced' | null
+
+        const openDrawer = (drawer, sectionId) => {
+            const sidebar = drawer === 'basic' ? basicSidebar : advancedSidebar;
+            const otherSidebar = drawer === 'basic' ? advancedSidebar : basicSidebar;
+
+            // Close the other drawer if open
+            otherSidebar.classList.remove('drawer-open');
+            document.querySelectorAll('.mobile-icon-btn').forEach(b => b.classList.remove('active'));
+
+            sidebar.classList.add('drawer-open');
+            backdrop.classList.add('active');
+            activeDrawer = drawer;
+
+            // Highlight the tapped icon
+            document.querySelectorAll(`.mobile-icon-btn[data-drawer="${drawer}"][data-section="${sectionId}"]`)
+                .forEach(b => b.classList.add('active'));
+
+            // Scroll to the target section inside the drawer
+            const section = document.getElementById(sectionId);
+            if (section) {
+                setTimeout(() => {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            }
+        };
+
+        const closeDrawers = () => {
+            basicSidebar.classList.remove('drawer-open');
+            advancedSidebar.classList.remove('drawer-open');
+            backdrop.classList.remove('active');
+            document.querySelectorAll('.mobile-icon-btn').forEach(b => b.classList.remove('active'));
+            activeDrawer = null;
+        };
+
+        // Icon button clicks
+        document.querySelectorAll('.mobile-icon-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const drawer = btn.dataset.drawer;
+                const section = btn.dataset.section;
+                const isAlreadyOpen = activeDrawer === drawer &&
+                    btn.classList.contains('active');
+
+                if (isAlreadyOpen) {
+                    closeDrawers();
+                } else {
+                    openDrawer(drawer, section);
+                }
+            });
+        });
+
+        // Backdrop tap closes
+        backdrop.addEventListener('click', closeDrawers);
+
+        // Close drawers when resizing above mobile breakpoint
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 480) closeDrawers();
+        });
+    }
+
+    debounce(fn, delay) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    initLivePreview() {
+        // Sliders — 300ms debounce (user may be dragging)
+        const debouncedProcess = this.debounce(() => {
+            if (this.originalImage) this.processImage();
+        }, 300);
+
+        const sliders = [
+            'pixelSize', 'gridThickness', 'brightness',
+            'contrast', 'saturation', 'hue',
+            'colorCount', 'edgeSmoothing'
+        ];
+        sliders.forEach(id => {
+            document.getElementById(id).addEventListener('input', debouncedProcess);
+        });
+
+        // Selects — instant (discrete choice, no drag)
+        const selects = [
+            'pixelShape', 'palette', 'ditheringType',
+            'colorSpace', 'scaleMethod'
+        ];
+        selects.forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                if (this.originalImage) this.processImage();
+            });
+        });
+
+        // Checkboxes — instant
+        const checkboxes = [
+            'dithering', 'colorClustering',
+            'preserveAspect', 'transparentBg', 'autoEnhance'
+        ];
+        checkboxes.forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                if (this.originalImage) this.processImage();
+            });
+        });
+
+        // Color picker — 200ms debounce
+        const debouncedColor = this.debounce(() => {
+            if (this.originalImage) this.processImage();
+        }, 200);
+        document.getElementById('gridColor').addEventListener('input', debouncedColor);
     }
 
     initPalettes() {
@@ -123,6 +243,13 @@ class PixelArtStudioPro {
                 ];
             }
         };
+
+        this.kernelFilters = {
+            edge:    { kernel: [-1,-1,-1, -1,8,-1, -1,-1,-1], divisor: 1 },
+            emboss:  { kernel: [-2,-1,0,  -1,1,1,   0,1,2],  divisor: 1 },
+            sharpen: { kernel: [0,-1,0,   -1,5,-1,  0,-1,0],  divisor: 1 },
+            blur:    { kernel: [1,1,1,     1,1,1,   1,1,1],   divisor: 9 }
+        };
     }
 
     initEventListeners() {
@@ -153,31 +280,52 @@ class PixelArtStudioPro {
             }
         });
 
-        // Controls
+        // Controls — label updates only (processing is handled by initLivePreview)
         document.getElementById('pixelSize').addEventListener('input', (e) => {
             document.getElementById('pixelSizeValue').textContent = e.target.value;
         });
 
-        document.getElementById('palette').addEventListener('change', (e) => {
-            const customSection = document.getElementById('customPaletteSection');
-            customSection.style.display = e.target.value === 'custom' ? 'block' : 'none';
-            if (e.target.value === 'custom') {
-                this.updateCustomColorGrid();
-            }
+        document.getElementById('gridThickness').addEventListener('input', (e) => {
+            document.getElementById('gridThicknessValue').textContent = e.target.value;
         });
 
         document.getElementById('colorCount').addEventListener('input', (e) => {
             document.getElementById('colorCountValue').textContent = e.target.value;
         });
 
-        // Filter chips
+        document.getElementById('edgeSmoothing').addEventListener('input', (e) => {
+            document.getElementById('edgeSmoothingValue').textContent = e.target.value;
+        });
+
+        document.getElementById('brightness').addEventListener('input', (e) => {
+            document.getElementById('brightnessValue').textContent = e.target.value;
+        });
+
+        document.getElementById('contrast').addEventListener('input', (e) => {
+            document.getElementById('contrastValue').textContent = e.target.value;
+        });
+
+        document.getElementById('saturation').addEventListener('input', (e) => {
+            document.getElementById('saturationValue').textContent = e.target.value;
+        });
+
+        document.getElementById('hue').addEventListener('input', (e) => {
+            document.getElementById('hueValue').textContent = e.target.value + '°';
+        });
+
+        // Palette — toggle custom section (processing handled by initLivePreview)
+        document.getElementById('palette').addEventListener('change', (e) => {
+            const customSection = document.getElementById('customPaletteSection');
+            customSection.style.display = e.target.value === 'custom' ? 'block' : 'none';
+            if (e.target.value === 'custom') this.updateCustomColorGrid();
+        });
+
+        // Filter chips — instant, toggle active state then process
         document.querySelectorAll('.filter-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
-                if (this.originalImage) {
-                    this.processImage();
-                }
+                if (this.originalImage) this.processImage();
             });
         });
 
@@ -232,6 +380,18 @@ class PixelArtStudioPro {
 
         document.getElementById('cancelExport').addEventListener('click', () => {
             document.getElementById('exportModal').classList.remove('active');
+        });
+
+        // Close on × button
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('exportModal').classList.remove('active');
+        });
+
+        // Close on backdrop click
+        document.getElementById('exportModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('exportModal')) {
+                document.getElementById('exportModal').classList.remove('active');
+            }
         });
 
         // Undo/Redo
@@ -291,7 +451,13 @@ class PixelArtStudioPro {
                 // Add to history
                 this.addToHistory();
             };
+            img.onerror = () => {
+                this.showToast('Could not load image — file may be corrupt or unsupported', 'error');
+            };
             img.src = e.target.result;
+        };
+        reader.onerror = () => {
+            this.showToast('Failed to read file — please try another image', 'error');
         };
         reader.readAsDataURL(file);
     }
@@ -332,6 +498,7 @@ class PixelArtStudioPro {
             const contrast = parseInt(document.getElementById('contrast').value);
             const saturation = parseInt(document.getElementById('saturation').value);
             const hue = parseInt(document.getElementById('hue').value);
+            const colorSpace = document.getElementById('colorSpace').value;
             
             // Get active filter
             const activeFilter = document.querySelector('.filter-chip.active')?.dataset.filter || 'none';
@@ -357,18 +524,47 @@ class PixelArtStudioPro {
             this.applyColorAdjustments(data, {brightness, contrast, saturation, hue});
             
             // Apply filter
-            if (activeFilter !== 'none' && this.filters[activeFilter]) {
-                this.applyFilter(data, activeFilter);
+            if (activeFilter !== 'none') {
+                this.applyFilter(data, activeFilter, pixelWidth, pixelHeight);
             }
             
             // Apply palette and dithering
-            if (palette !== 'full' && this.palettes[palette]) {
-                const paletteColors = this.palettes[palette];
-                
+            const useColorClustering = document.getElementById('colorClustering').checked;
+            const colorCount = parseInt(document.getElementById('colorCount').value);
+            let activePalette = (palette !== 'full' && this.palettes[palette])
+                ? this.palettes[palette]
+                : null;
+
+            if (useColorClustering) {
+                if (palette === 'full') {
+                    // Generate a palette directly from the image using K-Means
+                    activePalette = this.kMeansClustering(data, colorCount, colorSpace);
+                } else if (activePalette) {
+                    // Find which palette colors best represent this image's color clusters
+                    const k = Math.min(colorCount, activePalette.length);
+                    const clusters = this.kMeansClustering(data, k, colorSpace);
+                    if (clusters) {
+                        const cache = new Map();
+                        const mapped = clusters.map(c =>
+                            this.findClosestColor(c[0], c[1], c[2], activePalette, cache, colorSpace)
+                        );
+                        // Deduplicate while preserving order
+                        const seen = new Set();
+                        activePalette = mapped.filter(c => {
+                            const key = c.join(',');
+                            if (seen.has(key)) return false;
+                            seen.add(key);
+                            return true;
+                        });
+                    }
+                }
+            }
+
+            if (activePalette && activePalette.length > 0) {
                 if (useDithering) {
-                    this.applyDithering(data, pixelWidth, pixelHeight, paletteColors, ditheringType);
+                    this.applyDithering(data, pixelWidth, pixelHeight, activePalette, ditheringType, colorSpace);
                 } else {
-                    this.applyPalette(data, paletteColors);
+                    this.applyPalette(data, activePalette, colorSpace);
                 }
             }
             
@@ -495,148 +691,137 @@ class PixelArtStudioPro {
         ];
     }
 
-    applyFilter(data, filter) {
-        for (let i = 0; i < data.length; i += 4) {
-            const [r, g, b] = this.filters[filter](data[i], data[i+1], data[i+2]);
-            data[i] = r;
-            data[i+1] = g;
-            data[i+2] = b;
-        }
-    }
-
-    applyPalette(data, palette) {
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i+1];
-            const b = data[i+2];
-            
-            let minDistance = Infinity;
-            let bestColor = [r, g, b];
-            
-            for (const color of palette) {
-                const distance = Math.pow(r - color[0], 2) + 
-                               Math.pow(g - color[1], 2) + 
-                               Math.pow(b - color[2], 2);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    bestColor = color;
-                }
+    applyFilter(data, filter, width, height) {
+        if (this.kernelFilters[filter]) {
+            const { kernel, divisor } = this.kernelFilters[filter];
+            this.applyKernel(data, width, height, kernel, divisor);
+        } else if (this.filters[filter]) {
+            for (let i = 0; i < data.length; i += 4) {
+                const [r, g, b] = this.filters[filter](data[i], data[i+1], data[i+2]);
+                data[i] = r;
+                data[i+1] = g;
+                data[i+2] = b;
             }
-            
-            data[i] = bestColor[0];
-            data[i+1] = bestColor[1];
-            data[i+2] = bestColor[2];
         }
     }
 
-    applyDithering(data, width, height, palette, type) {
+    applyKernel(data, width, height, kernel, divisor = 1) {
+        const original = new Uint8ClampedArray(data);
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                let r = 0, g = 0, b = 0;
+                for (let ky = -1; ky <= 1; ky++) {
+                    for (let kx = -1; kx <= 1; kx++) {
+                        const px = Math.min(width - 1, Math.max(0, x + kx));
+                        const py = Math.min(height - 1, Math.max(0, y + ky));
+                        const i = (py * width + px) * 4;
+                        const weight = kernel[(ky + 1) * 3 + (kx + 1)];
+                        r += original[i]     * weight;
+                        g += original[i + 1] * weight;
+                        b += original[i + 2] * weight;
+                    }
+                }
+                const i = (y * width + x) * 4;
+                data[i]     = Math.min(255, Math.max(0, r / divisor));
+                data[i + 1] = Math.min(255, Math.max(0, g / divisor));
+                data[i + 2] = Math.min(255, Math.max(0, b / divisor));
+            }
+        }
+    }
+
+    applyPalette(data, palette, colorSpace = 'rgb') {
+        const cache = new Map();
+        for (let i = 0; i < data.length; i += 4) {
+            const best = this.findClosestColor(data[i], data[i+1], data[i+2], palette, cache, colorSpace);
+            data[i] = best[0];
+            data[i+1] = best[1];
+            data[i+2] = best[2];
+        }
+    }
+
+    applyDithering(data, width, height, palette, type, colorSpace = 'rgb') {
         switch(type) {
             case 'floyd':
-                this.applyFloydSteinberg(data, width, height, palette);
+                this.applyFloydSteinberg(data, width, height, palette, colorSpace);
                 break;
             case 'bayer':
-                this.applyBayerDithering(data, width, height, palette);
+                this.applyBayerDithering(data, width, height, palette, colorSpace);
                 break;
             case 'atkinson':
-                this.applyAtkinsonDithering(data, width, height, palette);
+                this.applyAtkinsonDithering(data, width, height, palette, colorSpace);
                 break;
             case 'burkes':
-                this.applyBurkesDithering(data, width, height, palette);
+                this.applyBurkesDithering(data, width, height, palette, colorSpace);
                 break;
             case 'stucki':
-                this.applyStuckiDithering(data, width, height, palette);
+                this.applyStuckiDithering(data, width, height, palette, colorSpace);
                 break;
             case 'sierra':
-                this.applySierraDithering(data, width, height, palette);
+                this.applySierraDithering(data, width, height, palette, colorSpace);
                 break;
             case 'jarvis':
-                this.applyJarvisDithering(data, width, height, palette);
+                this.applyJarvisDithering(data, width, height, palette, colorSpace);
                 break;
         }
     }
 
-    applyFloydSteinberg(data, width, height, palette) {
+    applyFloydSteinberg(data, width, height, palette, colorSpace = 'rgb') {
         const error = new Array(data.length).fill(0);
-        
+        const cache = new Map();
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                
+
                 const r = Math.min(255, Math.max(0, data[i] + error[i]));
                 const g = Math.min(255, Math.max(0, data[i+1] + error[i+1]));
                 const b = Math.min(255, Math.max(0, data[i+2] + error[i+2]));
-                
-                let minDistance = Infinity;
-                let newR = r, newG = g, newB = b;
-                
-                for (const color of palette) {
-                    const distance = Math.pow(r - color[0], 2) + 
-                                   Math.pow(g - color[1], 2) + 
-                                   Math.pow(b - color[2], 2);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        newR = color[0];
-                        newG = color[1];
-                        newB = color[2];
-                    }
-                }
-                
+
+                const [newR, newG, newB] = this.findClosestColor(r, g, b, palette, cache, colorSpace);
+
                 const errorR = r - newR;
                 const errorG = g - newG;
                 const errorB = b - newB;
-                
+
                 data[i] = newR;
                 data[i+1] = newG;
                 data[i+2] = newB;
-                
-                if (x + 1 < width) {
-                    this.addError(error, i + 4, errorR, errorG, errorB, 7/16);
-                }
+
+                if (x + 1 < width) this.addError(error, i + 4, errorR, errorG, errorB, 7/16);
                 if (y + 1 < height) {
-                    if (x > 0) {
-                        this.addError(error, i + width * 4 - 4, errorR, errorG, errorB, 3/16);
-                    }
+                    if (x > 0) this.addError(error, i + width * 4 - 4, errorR, errorG, errorB, 3/16);
                     this.addError(error, i + width * 4, errorR, errorG, errorB, 5/16);
-                    if (x + 1 < width) {
-                        this.addError(error, i + width * 4 + 4, errorR, errorG, errorB, 1/16);
-                    }
+                    if (x + 1 < width) this.addError(error, i + width * 4 + 4, errorR, errorG, errorB, 1/16);
                 }
             }
         }
     }
 
-    applyBayerDithering(data, width, height, palette) {
+    applyBayerDithering(data, width, height, palette, colorSpace = 'rgb') {
         const bayerMatrix = [
             [0, 8, 2, 10],
             [12, 4, 14, 6],
             [3, 11, 1, 9],
             [15, 7, 13, 5]
         ];
-        
+        const cache = new Map();
+        const cache2 = new Map();
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
                 const threshold = (bayerMatrix[y % 4][x % 4] / 16) * 255;
-                
+
                 const r = data[i];
                 const g = data[i+1];
                 const b = data[i+2];
-                
-                let distances = [];
-                for (const color of palette) {
-                    const distance = Math.pow(r - color[0], 2) + 
-                                   Math.pow(g - color[1], 2) + 
-                                   Math.pow(b - color[2], 2);
-                    distances.push({color, distance});
-                }
-                distances.sort((a, b) => a.distance - b.distance);
-                
-                const color1 = distances[0].color;
-                const color2 = distances[1]?.color || color1;
-                
+
+                const color1 = this.findClosestColor(r, g, b, palette, cache, colorSpace);
+                const color2 = this.findSecondClosestColor(r, g, b, palette, cache2, colorSpace, color1);
+
                 const blend = (r + g + b) / 3;
                 const color = blend < threshold ? color1 : color2;
-                
+
                 data[i] = color[0];
                 data[i+1] = color[1];
                 data[i+2] = color[2];
@@ -644,46 +829,53 @@ class PixelArtStudioPro {
         }
     }
 
-    applyAtkinsonDithering(data, width, height, palette) {
+    findSecondClosestColor(r, g, b, palette, cache, colorSpace, exclude) {
+        const key = `${colorSpace}:${r},${g},${b}`;
+        if (cache.has(key)) return cache.get(key);
+
+        const convert = this.colorSpaceConverters[colorSpace] || this.colorSpaceConverters.rgb;
+        const [a1, b1, c1] = convert(r, g, b);
+
+        let minDistance = Infinity;
+        let best = exclude;
+        for (const color of palette) {
+            if (color === exclude) continue;
+            const [a2, b2, c2] = convert(color[0], color[1], color[2]);
+            const d = (a1 - a2) ** 2 + (b1 - b2) ** 2 + (c1 - c2) ** 2;
+            if (d < minDistance) { minDistance = d; best = color; }
+        }
+        cache.set(key, best);
+        return best;
+    }
+
+    applyAtkinsonDithering(data, width, height, palette, colorSpace = 'rgb') {
         const error = new Array(data.length).fill(0);
-        
+        const cache = new Map();
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                
+
                 const r = Math.min(255, Math.max(0, data[i] + error[i]));
                 const g = Math.min(255, Math.max(0, data[i+1] + error[i+1]));
                 const b = Math.min(255, Math.max(0, data[i+2] + error[i+2]));
-                
-                let minDistance = Infinity;
-                let newR = r, newG = g, newB = b;
-                
-                for (const color of palette) {
-                    const distance = Math.pow(r - color[0], 2) + 
-                                   Math.pow(g - color[1], 2) + 
-                                   Math.pow(b - color[2], 2);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        newR = color[0];
-                        newG = color[1];
-                        newB = color[2];
-                    }
-                }
-                
+
+                const [newR, newG, newB] = this.findClosestColor(r, g, b, palette, cache, colorSpace);
+
                 const errorR = (r - newR) / 8;
                 const errorG = (g - newG) / 8;
                 const errorB = (b - newB) / 8;
-                
+
                 data[i] = newR;
                 data[i+1] = newG;
                 data[i+2] = newB;
-                
+
                 const positions = [
                     [1, 0], [2, 0],
                     [-1, 1], [0, 1], [1, 1],
                     [0, 2]
                 ];
-                
+
                 for (const [dx, dy] of positions) {
                     const nx = x + dx;
                     const ny = y + dy;
@@ -698,40 +890,28 @@ class PixelArtStudioPro {
         }
     }
 
-    applyBurkesDithering(data, width, height, palette) {
+    applyBurkesDithering(data, width, height, palette, colorSpace = 'rgb') {
         const error = new Array(data.length).fill(0);
-        
+        const cache = new Map();
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                
+
                 const r = Math.min(255, Math.max(0, data[i] + error[i]));
                 const g = Math.min(255, Math.max(0, data[i+1] + error[i+1]));
                 const b = Math.min(255, Math.max(0, data[i+2] + error[i+2]));
-                
-                let minDistance = Infinity;
-                let newR = r, newG = g, newB = b;
-                
-                for (const color of palette) {
-                    const distance = Math.pow(r - color[0], 2) + 
-                                   Math.pow(g - color[1], 2) + 
-                                   Math.pow(b - color[2], 2);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        newR = color[0];
-                        newG = color[1];
-                        newB = color[2];
-                    }
-                }
-                
+
+                const [newR, newG, newB] = this.findClosestColor(r, g, b, palette, cache, colorSpace);
+
                 const errorR = r - newR;
                 const errorG = g - newG;
                 const errorB = b - newB;
-                
+
                 data[i] = newR;
                 data[i+1] = newG;
                 data[i+2] = newB;
-                
+
                 if (x + 1 < width) this.addError(error, i + 4, errorR, errorG, errorB, 8/32);
                 if (x + 2 < width) this.addError(error, i + 8, errorR, errorG, errorB, 4/32);
                 if (y + 1 < height) {
@@ -745,46 +925,34 @@ class PixelArtStudioPro {
         }
     }
 
-    applyStuckiDithering(data, width, height, palette) {
+    applyStuckiDithering(data, width, height, palette, colorSpace = 'rgb') {
         const error = new Array(data.length).fill(0);
-        
+        const cache = new Map();
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                
+
                 const r = Math.min(255, Math.max(0, data[i] + error[i]));
                 const g = Math.min(255, Math.max(0, data[i+1] + error[i+1]));
                 const b = Math.min(255, Math.max(0, data[i+2] + error[i+2]));
-                
-                let minDistance = Infinity;
-                let newR = r, newG = g, newB = b;
-                
-                for (const color of palette) {
-                    const distance = Math.pow(r - color[0], 2) + 
-                                   Math.pow(g - color[1], 2) + 
-                                   Math.pow(b - color[2], 2);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        newR = color[0];
-                        newG = color[1];
-                        newB = color[2];
-                    }
-                }
-                
+
+                const [newR, newG, newB] = this.findClosestColor(r, g, b, palette, cache, colorSpace);
+
                 const errorR = r - newR;
                 const errorG = g - newG;
                 const errorB = b - newB;
-                
+
                 data[i] = newR;
                 data[i+1] = newG;
                 data[i+2] = newB;
-                
+
                 const positions = [
                     [1, 0, 8], [2, 0, 4],
                     [-2, 1, 2], [-1, 1, 4], [0, 1, 8], [1, 1, 4], [2, 1, 2],
                     [-2, 2, 1], [-1, 2, 2], [0, 2, 4], [1, 2, 2], [2, 2, 1]
                 ];
-                
+
                 for (const [dx, dy, weight] of positions) {
                     const nx = x + dx;
                     const ny = y + dy;
@@ -799,46 +967,34 @@ class PixelArtStudioPro {
         }
     }
 
-    applySierraDithering(data, width, height, palette) {
+    applySierraDithering(data, width, height, palette, colorSpace = 'rgb') {
         const error = new Array(data.length).fill(0);
-        
+        const cache = new Map();
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                
+
                 const r = Math.min(255, Math.max(0, data[i] + error[i]));
                 const g = Math.min(255, Math.max(0, data[i+1] + error[i+1]));
                 const b = Math.min(255, Math.max(0, data[i+2] + error[i+2]));
-                
-                let minDistance = Infinity;
-                let newR = r, newG = g, newB = b;
-                
-                for (const color of palette) {
-                    const distance = Math.pow(r - color[0], 2) + 
-                                   Math.pow(g - color[1], 2) + 
-                                   Math.pow(b - color[2], 2);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        newR = color[0];
-                        newG = color[1];
-                        newB = color[2];
-                    }
-                }
-                
+
+                const [newR, newG, newB] = this.findClosestColor(r, g, b, palette, cache, colorSpace);
+
                 const errorR = r - newR;
                 const errorG = g - newG;
                 const errorB = b - newB;
-                
+
                 data[i] = newR;
                 data[i+1] = newG;
                 data[i+2] = newB;
-                
+
                 const positions = [
                     [1, 0, 5], [2, 0, 3],
                     [-2, 1, 2], [-1, 1, 4], [0, 1, 5], [1, 1, 4], [2, 1, 2],
                     [-1, 2, 2], [0, 2, 3], [1, 2, 2]
                 ];
-                
+
                 for (const [dx, dy, weight] of positions) {
                     const nx = x + dx;
                     const ny = y + dy;
@@ -853,46 +1009,34 @@ class PixelArtStudioPro {
         }
     }
 
-    applyJarvisDithering(data, width, height, palette) {
+    applyJarvisDithering(data, width, height, palette, colorSpace = 'rgb') {
         const error = new Array(data.length).fill(0);
-        
+        const cache = new Map();
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                
+
                 const r = Math.min(255, Math.max(0, data[i] + error[i]));
                 const g = Math.min(255, Math.max(0, data[i+1] + error[i+1]));
                 const b = Math.min(255, Math.max(0, data[i+2] + error[i+2]));
-                
-                let minDistance = Infinity;
-                let newR = r, newG = g, newB = b;
-                
-                for (const color of palette) {
-                    const distance = Math.pow(r - color[0], 2) + 
-                                   Math.pow(g - color[1], 2) + 
-                                   Math.pow(b - color[2], 2);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        newR = color[0];
-                        newG = color[1];
-                        newB = color[2];
-                    }
-                }
-                
+
+                const [newR, newG, newB] = this.findClosestColor(r, g, b, palette, cache, colorSpace);
+
                 const errorR = r - newR;
                 const errorG = g - newG;
                 const errorB = b - newB;
-                
+
                 data[i] = newR;
                 data[i+1] = newG;
                 data[i+2] = newB;
-                
+
                 const positions = [
                     [1, 0, 7], [2, 0, 5],
                     [-2, 1, 3], [-1, 1, 5], [0, 1, 7], [1, 1, 5], [2, 1, 3],
                     [-2, 2, 1], [-1, 2, 3], [0, 2, 5], [1, 2, 3], [2, 2, 1]
                 ];
-                
+
                 for (const [dx, dy, weight] of positions) {
                     const nx = x + dx;
                     const ny = y + dy;
@@ -911,6 +1055,149 @@ class PixelArtStudioPro {
         error[index] += errorR * factor;
         error[index + 1] += errorG * factor;
         error[index + 2] += errorB * factor;
+    }
+
+    findClosestColor(r, g, b, palette, cache, colorSpace = 'rgb') {
+        const key = `${colorSpace}:${r},${g},${b}`;
+        if (cache.has(key)) return cache.get(key);
+
+        const convert = this.colorSpaceConverters[colorSpace] || this.colorSpaceConverters.rgb;
+        const [a1, b1, c1] = convert(r, g, b);
+
+        let minDistance = Infinity;
+        let best = palette[0];
+        for (const color of palette) {
+            const [a2, b2, c2] = convert(color[0], color[1], color[2]);
+            const d = (a1 - a2) ** 2 + (b1 - b2) ** 2 + (c1 - c2) ** 2;
+            if (d < minDistance) { minDistance = d; best = color; }
+        }
+        cache.set(key, best);
+        return best;
+    }
+
+    // Color space converters — each returns a 3-value array for distance comparison
+    get colorSpaceConverters() {
+        if (this._colorSpaceConverters) return this._colorSpaceConverters;
+        this._colorSpaceConverters = {
+            rgb: (r, g, b) => [r, g, b],
+
+            hsl: (r, g, b) => {
+                r /= 255; g /= 255; b /= 255;
+                const max = Math.max(r, g, b), min = Math.min(r, g, b);
+                const l = (max + min) / 2;
+                if (max === min) return [0, 0, l * 100];
+                const d = max - min;
+                const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                let h;
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                return [h * 60, s * 100, l * 100];
+            },
+
+            yuv: (r, g, b) => [
+                 0.299 * r + 0.587 * g + 0.114 * b,
+                -0.147 * r - 0.289 * g + 0.436 * b,
+                 0.615 * r - 0.515 * g - 0.100 * b
+            ],
+
+            lab: (r, g, b) => {
+                // sRGB -> linear
+                const lin = v => {
+                    v /= 255;
+                    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+                };
+                // linear RGB -> XYZ (D65)
+                const lr = lin(r), lg = lin(g), lb = lin(b);
+                const x = (lr * 0.4124 + lg * 0.3576 + lb * 0.1805) / 0.95047;
+                const y = (lr * 0.2126 + lg * 0.7152 + lb * 0.0722) / 1.00000;
+                const z = (lr * 0.0193 + lg * 0.1192 + lb * 0.9505) / 1.08883;
+                // XYZ -> LAB
+                const f = t => t > 0.008856 ? t ** (1/3) : (7.787 * t) + (16 / 116);
+                const fx = f(x), fy = f(y), fz = f(z);
+                return [(116 * fy) - 16, 500 * (fx - fy), 200 * (fy - fz)];
+            }
+        };
+        return this._colorSpaceConverters;
+    }
+
+    kMeansClustering(data, k, colorSpace = 'rgb', maxIterations = 20) {
+        const convert = this.colorSpaceConverters[colorSpace] || this.colorSpaceConverters.rgb;
+
+        // Sample up to 2000 pixels for performance
+        const pixels = [];
+        const step = Math.max(1, Math.floor(data.length / 4 / 2000));
+        for (let i = 0; i < data.length; i += 4 * step) {
+            if (data[i + 3] > 0) pixels.push([data[i], data[i + 1], data[i + 2]]);
+        }
+
+        if (pixels.length === 0) return null;
+        k = Math.min(k, pixels.length);
+
+        // K-Means++ initialization for better starting centroids
+        let centroids = this.kMeansPlusPlus(pixels, k);
+
+        for (let iter = 0; iter < maxIterations; iter++) {
+            const clusters = Array.from({ length: k }, () => []);
+
+            for (const pixel of pixels) {
+                const [a1, b1, c1] = convert(pixel[0], pixel[1], pixel[2]);
+                let minDist = Infinity, bestIdx = 0;
+                for (let j = 0; j < centroids.length; j++) {
+                    const [a2, b2, c2] = convert(centroids[j][0], centroids[j][1], centroids[j][2]);
+                    const d = (a1 - a2) ** 2 + (b1 - b2) ** 2 + (c1 - c2) ** 2;
+                    if (d < minDist) { minDist = d; bestIdx = j; }
+                }
+                clusters[bestIdx].push(pixel);
+            }
+
+            let changed = false;
+            for (let j = 0; j < k; j++) {
+                if (clusters[j].length === 0) continue;
+                const n = clusters[j].length;
+                const newR = Math.round(clusters[j].reduce((s, p) => s + p[0], 0) / n);
+                const newG = Math.round(clusters[j].reduce((s, p) => s + p[1], 0) / n);
+                const newB = Math.round(clusters[j].reduce((s, p) => s + p[2], 0) / n);
+                if (newR !== centroids[j][0] || newG !== centroids[j][1] || newB !== centroids[j][2]) {
+                    centroids[j] = [newR, newG, newB];
+                    changed = true;
+                }
+            }
+
+            if (!changed) break;
+        }
+
+        return centroids;
+    }
+
+    kMeansPlusPlus(pixels, k) {
+        const centroids = [];
+        centroids.push([...pixels[Math.floor(Math.random() * pixels.length)]]);
+
+        for (let i = 1; i < k; i++) {
+            // Each pixel gets probability proportional to its squared distance to nearest centroid
+            const distances = pixels.map(pixel => {
+                let minDist = Infinity;
+                for (const c of centroids) {
+                    const d = (pixel[0] - c[0]) ** 2 + (pixel[1] - c[1]) ** 2 + (pixel[2] - c[2]) ** 2;
+                    if (d < minDist) minDist = d;
+                }
+                return minDist;
+            });
+
+            const total = distances.reduce((s, d) => s + d, 0);
+            let rand = Math.random() * total;
+            let chosen = pixels[pixels.length - 1];
+            for (let j = 0; j < pixels.length; j++) {
+                rand -= distances[j];
+                if (rand <= 0) { chosen = pixels[j]; break; }
+            }
+            centroids.push([...chosen]);
+        }
+
+        return centroids;
     }
 
     drawShapedPixels(smallCanvas, shape) {
@@ -1092,7 +1379,11 @@ class PixelArtStudioPro {
             `;
             
             const thumb = item.querySelector('canvas');
-            thumb.getContext('2d').putImageData(this.history[i], 0, 0, 0, 0, 40, 40);
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.pixelCanvas.width;
+            tempCanvas.height = this.pixelCanvas.height;
+            tempCanvas.getContext('2d').putImageData(this.history[i], 0, 0);
+            thumb.getContext('2d').drawImage(tempCanvas, 0, 0, 40, 40);
             
             item.addEventListener('click', () => {
                 this.currentHistoryIndex = i;
@@ -1119,9 +1410,9 @@ class PixelArtStudioPro {
             await navigator.clipboard.write([
                 new ClipboardItem({ 'image/png': blob })
             ]);
-            alert('Image copied to clipboard!');
+            this.showToast('Image copied to clipboard!');
         } catch (err) {
-            alert('Failed to copy image');
+            this.showToast('Failed to copy image', 'error');
         }
     }
 
@@ -1137,10 +1428,10 @@ class PixelArtStudioPro {
                     files: [file]
                 });
             } catch (err) {
-                alert('Sharing failed');
+                this.showToast('Sharing failed', 'error');
             }
         } else {
-            alert('Web Share API not supported');
+            this.showToast('Web Share API not supported', 'error');
         }
     }
 
@@ -1154,61 +1445,77 @@ class PixelArtStudioPro {
     }
 
     applyPreset(preset) {
+        const setVal = (id, value) => {
+            document.getElementById(id).value = value;
+        };
+        const setLabel = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        };
+        const syncPixelSize = (v) => { setVal('pixelSize', v); setLabel('pixelSizeValue', v); };
+        const syncSaturation = (v) => { setVal('saturation', v); setLabel('saturationValue', v); };
+        const syncGridThickness = (v) => { setVal('gridThickness', v); setLabel('gridThicknessValue', v); };
+
         const presets = {
             '8bit': () => {
-                document.getElementById('pixelSize').value = 8;
-                document.getElementById('palette').value = 'nes';
+                syncPixelSize(8);
+                setVal('palette', 'nes');
                 document.getElementById('dithering').checked = true;
-                document.getElementById('ditheringType').value = 'floyd';
-                document.getElementById('pixelShape').value = 'square';
+                setVal('ditheringType', 'floyd');
+                setVal('pixelShape', 'square');
             },
             '16bit': () => {
-                document.getElementById('pixelSize').value = 4;
-                document.getElementById('palette').value = 'sega';
+                syncPixelSize(4);
+                setVal('palette', 'sega');
                 document.getElementById('dithering').checked = true;
-                document.getElementById('ditheringType').value = 'bayer';
+                setVal('ditheringType', 'bayer');
             },
             'gameboy': () => {
-                document.getElementById('pixelSize').value = 8;
-                document.getElementById('palette').value = 'gameboy';
+                syncPixelSize(8);
+                setVal('palette', 'gameboy');
                 document.getElementById('dithering').checked = true;
-                document.getElementById('ditheringType').value = 'atkinson';
-                document.getElementById('saturation').value = -100;
+                setVal('ditheringType', 'atkinson');
+                syncSaturation(-100);
             },
             'nes': () => {
-                document.getElementById('pixelSize').value = 8;
-                document.getElementById('palette').value = 'nes';
+                syncPixelSize(8);
+                setVal('palette', 'nes');
                 document.getElementById('dithering').checked = true;
-                document.getElementById('ditheringType').value = 'floyd';
+                setVal('ditheringType', 'floyd');
             },
             'crt': () => {
-                document.getElementById('pixelSize').value = 4;
-                document.getElementById('pixelShape').value = 'circle';
+                syncPixelSize(4);
+                setVal('pixelShape', 'circle');
                 document.getElementById('dithering').checked = true;
-                document.getElementById('ditheringType').value = 'bayer';
+                setVal('ditheringType', 'bayer');
             },
             'dotmatrix': () => {
-                document.getElementById('pixelSize').value = 6;
-                document.getElementById('pixelShape').value = 'circle';
-                document.getElementById('gridThickness').value = 1;
+                syncPixelSize(6);
+                setVal('pixelShape', 'circle');
+                syncGridThickness(1);
                 document.getElementById('dithering').checked = false;
             },
             'crossstitch': () => {
-                document.getElementById('pixelSize').value = 10;
-                document.getElementById('pixelShape').value = 'diamond';
-                document.getElementById('gridThickness').value = 0.5;
-                document.getElementById('palette').value = 'cga';
+                syncPixelSize(10);
+                setVal('pixelShape', 'diamond');
+                syncGridThickness(0.5);
+                setVal('palette', 'cga');
             },
             'minecraft': () => {
-                document.getElementById('pixelSize').value = 16;
-                document.getElementById('pixelShape').value = 'square';
-                document.getElementById('gridThickness').value = 1;
-                document.getElementById('gridColor').value = '#555555';
+                syncPixelSize(16);
+                setVal('pixelShape', 'square');
+                syncGridThickness(1);
+                setVal('gridColor', '#555555');
             }
         };
-        
+
         if (preset && presets[preset]) {
             presets[preset]();
+
+            // Reset filter chip to None
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('.filter-chip[data-filter="none"]').classList.add('active');
+
             this.processImage();
         }
     }
@@ -1216,7 +1523,7 @@ class PixelArtStudioPro {
     exportImage() {
         const format = document.getElementById('exportFormat').value;
         const quality = document.getElementById('exportQuality').value / 100;
-        const scale = parseInt(document.getElementById('exportScale').value);
+        const scale = Math.min(10, Math.max(1, parseInt(document.getElementById('exportScale').value) || 1));
         const transparent = document.getElementById('exportTransparent').checked;
         
         if (scale !== 1) {
@@ -1253,7 +1560,24 @@ class PixelArtStudioPro {
 
     batchProcess() {
         const batchSize = parseInt(document.getElementById('batchSize').value);
-        alert(`Processing ${batchSize} images... (Demo feature)`);
+        this.showToast(`Processing ${batchSize} images... (Demo feature)`);
+    }
+
+    showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: ${type === 'success' ? '#4ecdc4' : '#ff6b6b'};
+            color: white; padding: 12px 24px; border-radius: 25px;
+            font-weight: 600; z-index: 9999; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transition: opacity 0.4s ease; opacity: 1;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 2000);
     }
 }
 
