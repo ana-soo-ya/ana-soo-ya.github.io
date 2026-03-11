@@ -821,6 +821,11 @@ canvas {
     .modal h2 {
         font-size: 1.1em;
     }
+
+    /* Hide icon bars while a drawer is open so they don't float over the panel */
+    .drawer-backdrop.active ~ .mobile-icon-bar {
+        display: none;
+    }
 }
 
 /* Loading Spinner */
